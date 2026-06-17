@@ -18,6 +18,19 @@ r = C.classifyTweet('A thread about gardening.');
 assert.equal(r.related, false);
 assert.equal(C.roleAllows('jury', r), false);
 
+r = C.classifyTweet('This does not name him but comes from the search results page.', undefined, 'https://x.com/search?q=brent%20dill');
+assert.equal(r.related, true);
+assert.equal(r.lane, 'jury');
+assert.equal(C.roleAllows('jury', r), true);
+assert.equal(C.roleAllows('prosecution', r), false);
+assert.equal(C.roleAllows('defense', r), false);
+
+r = C.classifyTweet('He is dangerous and the pattern is harmful.', undefined, 'brent dill search context');
+assert.equal(r.related, true);
+assert.equal(r.lane, 'prosecution');
+assert.equal(C.roleAllows('jury', r), true);
+assert.equal(C.roleAllows('prosecution', r), true);
+
 r = C.classifyTweet('Brent Dill dangerous harm but also possibly misrepresented context.');
 assert.equal(r.lane, 'contested');
 assert.equal(C.roleAllows('jury', r), true);

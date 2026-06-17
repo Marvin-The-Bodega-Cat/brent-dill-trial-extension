@@ -10,7 +10,10 @@
   };
 
   function normalizeText(text) {
-    return String(text || "").toLowerCase().replace(/\s+/g, " ").trim();
+    const raw = String(text || "");
+    let decoded = raw;
+    try { decoded = decodeURIComponent(raw); } catch (_) { decoded = raw; }
+    return decoded.toLowerCase().replace(/\s+/g, " ").trim();
   }
 
   function containsAny(text, terms) {
@@ -18,14 +21,18 @@
     return (terms || []).filter(term => t.includes(normalizeText(term)));
   }
 
-  function classifyTweet(text, config = DEFAULT_CONFIG) {
+  function classifyTweet(text, config = DEFAULT_CONFIG, contextText = "") {
     const normalized = normalizeText(text);
-    const subjectMatches = containsAny(normalized, config.subjectNames || DEFAULT_CONFIG.subjectNames);
-    if (subjectMatches.length === 0) {
-      return { related: false, lane: "irrelevant", subjectMatches, prosecutionMatches: [], defenseMatches: [], score: 0 };
-    }
+    const subjectTerms = config.subjectNames || DEFAULT_CONFIG.subjectNames;
+    const directSubjectMatches = containsAny(normalized, subjectTerms);
+    const contextSubjectMatches = containsAny(contextText, subjectTerms).map(term => `context:${term}`);
+    const subjectMatches = [...directSubjectMatches, ...contextSubjectMatches];
     const pMatches = containsAny(normalized, config.pTerms || DEFAULT_CONFIG.pTerms);
     const dMatches = containsAny(normalized, config.dTerms || DEFAULT_CONFIG.dTerms);
+    const related = subjectMatches.length > 0;
+    if (!related) {
+      return { related: false, lane: "irrelevant", subjectMatches: [], prosecutionMatches: [], defenseMatches: [], score: 0 };
+    }
     let lane = "jury";
     if (pMatches.length > dMatches.length) lane = "prosecution";
     if (dMatches.length > pMatches.length) lane = "defense";

@@ -31,6 +31,8 @@ Prediction-market and payout mechanics are documented as protocol rails only. Th
 4. Visit `https://x.com` or `https://twitter.com` and scroll.
 5. Use the popup to choose role and export JSONL.
 
+After pulling an update, click Reload on the extension card and refresh X. Chrome does not reload unpacked extension code by divine intervention. It should, perhaps, but it does not.
+
 ## Development
 
 ```bash

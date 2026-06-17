@@ -37,6 +37,18 @@
     return match ? match[1] : null;
   }
 
+  function pageContextText() {
+    const parts = [location.href];
+    const searchInput = document.querySelector('input[data-testid="SearchBox_Search_Input"], input[aria-label="Search query"]');
+    if (searchInput && searchInput.value) parts.push(searchInput.value);
+    const params = new URLSearchParams(location.search);
+    for (const key of ["q", "src"]) {
+      const value = params.get(key);
+      if (value) parts.push(value);
+    }
+    return parts.join(" ");
+  }
+
   function addBadge(article, classification) {
     if (article.querySelector(`.${BADGE_CLASS}`)) return;
     const badge = document.createElement("button");
@@ -83,7 +95,7 @@
       if (article.getAttribute(SCANNED_ATTR) === "1") continue;
       article.setAttribute(SCANNED_ATTR, "1");
       const text = article.innerText || "";
-      const classification = globalThis.BDTrialClassifier.classifyTweet(text, state.config);
+      const classification = globalThis.BDTrialClassifier.classifyTweet(text, state.config, pageContextText());
       if (!globalThis.BDTrialClassifier.roleAllows(state.role, classification)) continue;
       const receipt = globalThis.BDTrialClassifier.receiptFromTweet({
         tweetId: tweetIdFromArticle(article),
