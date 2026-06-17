@@ -49,6 +49,34 @@
     return parts.join(" ");
   }
 
+  function unique(values) {
+    return Array.from(new Set(values.filter(Boolean)));
+  }
+
+  function statusUrlsFromArticle(article) {
+    return unique(Array.from(article.querySelectorAll('a[href*="/status/"]')).map(a => a.href));
+  }
+
+  function domFeaturesFromArticle(article, mainTweetId) {
+    const statusUrls = statusUrlsFromArticle(article);
+    const imageUrls = unique(Array.from(article.querySelectorAll('img[src*="pbs.twimg.com/media/"]')).map(img => img.src));
+    const linkUrls = unique(Array.from(article.querySelectorAll('a[href]')).map(a => a.href));
+    const quotedStatusUrls = statusUrls.filter(url => !mainTweetId || !url.includes(`/status/${mainTweetId}`));
+    const text = article.innerText || "";
+    return {
+      status_urls: statusUrls,
+      quoted_status_urls: quotedStatusUrls,
+      has_quote_card: quotedStatusUrls.length > 0 || /\bQuote\b/.test(text),
+      image_urls: imageUrls,
+      image_count: imageUrls.length,
+      video_count: article.querySelectorAll('video').length,
+      has_media: imageUrls.length > 0 || article.querySelectorAll('video').length > 0,
+      link_urls: linkUrls,
+      visible_has_show_more: /\bShow more\b/.test(text),
+      visible_has_replying_to: /\bReplying to\b/.test(text)
+    };
+  }
+
   function addBadge(article, classification) {
     if (article.querySelector(`.${BADGE_CLASS}`)) return;
     const badge = document.createElement("button");
@@ -97,13 +125,15 @@
       const text = article.innerText || "";
       const classification = globalThis.BDTrialClassifier.classifyTweet(text, state.config, pageContextText());
       if (!globalThis.BDTrialClassifier.roleAllows(state.role, classification)) continue;
+      const tweetId = tweetIdFromArticle(article);
       const receipt = globalThis.BDTrialClassifier.receiptFromTweet({
-        tweetId: tweetIdFromArticle(article),
+        tweetId,
         url: tweetUrlFromArticle(article),
         author: authorFromArticle(article),
         text,
         role: state.role,
-        classification
+        classification,
+        domFeatures: domFeaturesFromArticle(article, tweetId)
       });
       addBadge(article, classification);
       await persistReceipt(receipt);

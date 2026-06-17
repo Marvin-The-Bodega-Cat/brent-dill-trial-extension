@@ -37,7 +37,8 @@ assert.equal(C.roleAllows('jury', r), true);
 assert.equal(C.roleAllows('prosecution', r), true);
 assert.equal(C.roleAllows('defense', r), true);
 
-const receipt = C.receiptFromTweet({tweetId:'1', url:'https://x.com/i/web/status/1', author:'someone', text:'Brent Dill dangerous', role:'jury', classification:r, capturedAt:'2026-06-17T00:00:00Z'});
-assert.equal(receipt.schema_version, 'trial-extension-capture/v0.1');
+const receipt = C.receiptFromTweet({tweetId:'1', url:'https://x.com/i/web/status/1', author:'someone', text:'Brent Dill dangerous', role:'jury', classification:r, capturedAt:'2026-06-17T00:00:00Z', domFeatures:{has_media:true,image_count:1}});
+assert.equal(receipt.schema_version, 'trial-extension-capture/v0.2');
+assert.equal(receipt.dom_features.image_count, 1);
 assert.equal(receipt.admission, 'unreviewed');
 console.log('classifier tests passed');

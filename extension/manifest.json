@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Brent Dill Trial Evidence Scanner",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Local-first scanner for public X/Twitter evidence receipts for the Brent Dill beamline trial.",
   "permissions": [
     "storage",

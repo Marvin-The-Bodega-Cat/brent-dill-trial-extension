@@ -49,9 +49,9 @@
     return true;
   }
 
-  function receiptFromTweet({ tweetId, url, author, text, role, classification, capturedAt }) {
+  function receiptFromTweet({ tweetId, url, author, text, role, classification, capturedAt, domFeatures }) {
     return {
-      schema_version: "trial-extension-capture/v0.1",
+      schema_version: "trial-extension-capture/v0.2",
       source_platform: "x",
       source_type: "public_tweet_visible_in_browser",
       tweet_id: tweetId || null,
@@ -66,6 +66,7 @@
         prosecution: classification.prosecutionMatches,
         defense: classification.defenseMatches
       },
+      dom_features: domFeatures || {},
       admission: "unreviewed",
       counter_context: "",
       captured_at: capturedAt || new Date().toISOString()

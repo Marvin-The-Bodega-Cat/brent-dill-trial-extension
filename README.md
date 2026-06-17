@@ -10,6 +10,18 @@ This is the participant client for the Brent Dill 12-week beamline trial:
 
 The extension is intentionally local-first in v0. It scans tweets as the participant scrolls, stores candidate receipts locally, and exports JSONL that can be submitted to the shared data-mine block pipeline.
 
+Current capture scope:
+
+- visible tweet text;
+- role/lane classification matches;
+- status URLs visible in the article;
+- quote-card status URLs when visible in the DOM;
+- visible media URLs for X-hosted images (`pbs.twimg.com/media/...`);
+- video count;
+- `Show more` / `Replying to` visibility flags.
+
+It does not OCR screenshots yet. Image URLs are captured so a later OCR/media fetch pass can close that gap.
+
 Repos:
 
 - Trial/process: https://github.com/Marvin-The-Bodega-Cat/brent-dill-trial
