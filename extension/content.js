@@ -5,11 +5,36 @@
   let state = { ...defaultState };
   const seen = new Set();
 
-  function storageGet(keys) {
-    return new Promise(resolve => chrome.storage.local.get(keys, resolve));
+  function hasChromeStorage() {
+    return typeof chrome !== "undefined" && chrome.storage && chrome.storage.local;
   }
+
+  function storageGet(keys) {
+    return new Promise(resolve => {
+      if (hasChromeStorage()) return chrome.storage.local.get(keys, resolve);
+      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+        return chrome.runtime.sendMessage({ type: "storage-get", keys }, response => resolve((response && response.values) || {}));
+      }
+      resolve({});
+    });
+  }
+
   function storageSet(obj) {
-    return new Promise(resolve => chrome.storage.local.set(obj, resolve));
+    return new Promise(resolve => {
+      if (hasChromeStorage()) return chrome.storage.local.set(obj, resolve);
+      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+        return chrome.runtime.sendMessage({ type: "storage-set", values: obj }, () => resolve());
+      }
+      resolve();
+    });
+  }
+
+  function sendRuntimeMessage(message) {
+    try {
+      if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.sendMessage) return;
+      const maybePromise = chrome.runtime.sendMessage(message);
+      if (maybePromise && typeof maybePromise.catch === "function") maybePromise.catch(() => {});
+    } catch (_) {}
   }
 
   async function loadState() {
@@ -112,7 +137,7 @@
     if (!captures.some(r => (r.tweet_id && r.tweet_id === receipt.tweet_id) || (!r.tweet_id && r.text === receipt.text))) {
       captures.push(receipt);
       await storageSet({ captures });
-      chrome.runtime.sendMessage({ type: "capture-count", count: captures.length }).catch(() => {});
+      sendRuntimeMessage({ type: "capture-count", count: captures.length });
     }
   }
 
@@ -120,8 +145,6 @@
     if (!state.enabled) return;
     const articles = Array.from(document.querySelectorAll('article[role="article"]'));
     for (const article of articles) {
-      if (article.getAttribute(SCANNED_ATTR) === "1") continue;
-      article.setAttribute(SCANNED_ATTR, "1");
       const text = article.innerText || "";
       const classification = globalThis.BDTrialClassifier.classifyTweet(text, state.config, pageContextText());
       if (!globalThis.BDTrialClassifier.roleAllows(state.role, classification)) continue;
