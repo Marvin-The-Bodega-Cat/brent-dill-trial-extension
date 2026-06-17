@@ -1,0 +1,69 @@
+(function (global) {
+  const DEFAULT_CONFIG = {
+    subjectNames: ["brent dill", "brentdill", "brent_dill"],
+    pTerms: [
+      "dangerous", "harm", "harmful", "abuse", "abusive", "pattern", "unsafe", "exclude", "excluded", "predator", "manipulative", "threat", "victim", "warning"
+    ],
+    dTerms: [
+      "harmless", "outsized", "overreaction", "overreacted", "context", "misread", "misrepresented", "clearing", "innocent", "unfair", "mob", "default guilty", "witch hunt"
+    ]
+  };
+
+  function normalizeText(text) {
+    return String(text || "").toLowerCase().replace(/\s+/g, " ").trim();
+  }
+
+  function containsAny(text, terms) {
+    const t = normalizeText(text);
+    return (terms || []).filter(term => t.includes(normalizeText(term)));
+  }
+
+  function classifyTweet(text, config = DEFAULT_CONFIG) {
+    const normalized = normalizeText(text);
+    const subjectMatches = containsAny(normalized, config.subjectNames || DEFAULT_CONFIG.subjectNames);
+    if (subjectMatches.length === 0) {
+      return { related: false, lane: "irrelevant", subjectMatches, prosecutionMatches: [], defenseMatches: [], score: 0 };
+    }
+    const pMatches = containsAny(normalized, config.pTerms || DEFAULT_CONFIG.pTerms);
+    const dMatches = containsAny(normalized, config.dTerms || DEFAULT_CONFIG.dTerms);
+    let lane = "jury";
+    if (pMatches.length > dMatches.length) lane = "prosecution";
+    if (dMatches.length > pMatches.length) lane = "defense";
+    if (pMatches.length && dMatches.length && pMatches.length === dMatches.length) lane = "contested";
+    const score = subjectMatches.length + pMatches.length + dMatches.length;
+    return { related: true, lane, subjectMatches, prosecutionMatches: pMatches, defenseMatches: dMatches, score };
+  }
+
+  function roleAllows(role, classification) {
+    if (!classification.related) return false;
+    if (role === "jury") return true;
+    if (role === "prosecution") return classification.lane === "prosecution" || classification.lane === "contested";
+    if (role === "defense") return classification.lane === "defense" || classification.lane === "contested";
+    return true;
+  }
+
+  function receiptFromTweet({ tweetId, url, author, text, role, classification, capturedAt }) {
+    return {
+      schema_version: "trial-extension-capture/v0.1",
+      source_platform: "x",
+      source_type: "public_tweet_visible_in_browser",
+      tweet_id: tweetId || null,
+      url: url || null,
+      author: author || null,
+      text: text || "",
+      participant_role: role || "jury",
+      suggested_lane: classification.lane,
+      related: classification.related,
+      matches: {
+        subject: classification.subjectMatches,
+        prosecution: classification.prosecutionMatches,
+        defense: classification.defenseMatches
+      },
+      admission: "unreviewed",
+      counter_context: "",
+      captured_at: capturedAt || new Date().toISOString()
+    };
+  }
+
+  global.BDTrialClassifier = { DEFAULT_CONFIG, normalizeText, classifyTweet, roleAllows, receiptFromTweet };
+})(typeof globalThis !== "undefined" ? globalThis : window);

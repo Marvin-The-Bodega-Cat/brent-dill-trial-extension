@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Brent Dill Trial Evidence Scanner",
+  "version": "0.1.0",
+  "description": "Local-first scanner for public X/Twitter evidence receipts for the Brent Dill beamline trial.",
+  "permissions": [
+    "storage",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://twitter.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*"
+      ],
+      "js": [
+        "lib/classifier.js",
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Brent Dill Trial",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html"
+}

@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test": "node tests/classifier.test.js",
+    "check": "node --check extension/*.js extension/lib/*.js && python3 -m json.tool extension/manifest.json >/dev/null",
+    "package": "rm -f brent-dill-trial-extension.zip && cd extension && zip -qr ../brent-dill-trial-extension.zip ."
+  },
+  "devDependencies": {}
+}

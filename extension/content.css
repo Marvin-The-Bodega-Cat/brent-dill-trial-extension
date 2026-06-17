@@ -1,0 +1,16 @@
+.bd-trial-badge {
+  position: relative;
+  z-index: 10;
+  margin: 8px 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(120,120,120,.5);
+  background: #111;
+  color: #eee;
+  font: 12px/1.2 system-ui, sans-serif;
+  cursor: pointer;
+}
+.bd-trial-badge.prosecution { border-color: #ff6b6b; }
+.bd-trial-badge.defense { border-color: #69db7c; }
+.bd-trial-badge.jury, .bd-trial-badge.contested { border-color: #ffd43b; }
+.bd-trial-badge.admitted { background: #1f6f3a; }
